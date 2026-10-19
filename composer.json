@@ -1,0 +1,53 @@
+{
+  "name": "mnml-ai/sdk",
+  "description": "The official PHP client for the mnml API: architecture renders, edits, enhancements and video.",
+  "type": "library",
+  "license": "MIT",
+  "keywords": [
+    "mnml",
+    "architecture",
+    "rendering",
+    "ai",
+    "api",
+    "sdk"
+  ],
+  "homepage": "https://developers.mnml.ai/sdks",
+  "support": {
+    "docs": "https://developers.mnml.ai/docs",
+    "issues": "https://github.com/mnml-ai/mnml-sdk-php/issues",
+    "source": "https://github.com/mnml-ai/mnml-sdk-php"
+  },
+  "authors": [
+    {
+      "name": "mnml",
+      "email": "hello@mnml.ai",
+      "homepage": "https://mnml.ai"
+    }
+  ],
+  "require": {
+    "php": ">=8.1",
+    "ext-json": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.5 || ^11.0"
+  },
+  "suggest": {
+    "ext-openssl": "Needed for https:// with the built-in transport (enabled in almost every PHP build)."
+  },
+  "autoload": {
+    "psr-4": {
+      "Mnml\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Mnml\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit"
+  },
+  "config": {
+    "sort-packages": true
+  }
+}
