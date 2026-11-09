@@ -21,7 +21,7 @@ final class ClientTest extends TestCase
 
     public function testARenderPostsItsBodyWithTheKeyAnIdempotencyKeyAndADataUri(): void
     {
-        $api = (new FakeTransport())->ok('{"id":"42","ids":["42"],"status":"queued","credits_charged":30,"replayed":false,"notes":[]}');
+        $api = (new FakeTransport())->ok('{"id":"42","ids":["42"],"status":"queued","charged_usd":0.297,"credits_charged":30,"replayed":false,"notes":[]}');
 
         $started = $api->client()->renders->create([
             'prompt' => 'Timber facade, dusk',
@@ -32,6 +32,7 @@ final class ClientTest extends TestCase
 
         self::assertSame('42', $started->id);
         self::assertSame(JobStatus::QUEUED, $started->status);
+        self::assertSame(0.297, $started->chargedUsd);
         $r = $api->requests[0];
         self::assertSame(['POST', 'https://api.test/v2/renders'], [$r['method'], $r['url']]);
         self::assertSame('Bearer test-key', $r['headers']['authorization']);
@@ -46,7 +47,7 @@ final class ClientTest extends TestCase
     {
         $api = (new FakeTransport())
             ->fail(503, 'SERVICE_UNAVAILABLE', 'Busy.', ['Retry-After' => '5'])
-            ->ok('{"id":"7","status":"queued","credits_charged":2,"replayed":false,"notes":[]}');
+            ->ok('{"id":"7","status":"queued","charged_usd":0.0198,"credits_charged":2,"replayed":false,"notes":[]}');
 
         $api->client()->edits->create(['prompt' => 'Add trees', 'job_id' => '41']);
 
@@ -137,11 +138,13 @@ final class ClientTest extends TestCase
 
     public function testARenderThatSettledInTheHeldAnswerNeedsNoPoll(): void
     {
-        $api = (new FakeTransport())->ok('{"id":"42","ids":["42"],"status":"succeeded","credits_charged":30,"replayed":false,"notes":[],"jobs":[' . FakeTransport::JOB . ']}');
+        $api = (new FakeTransport())->ok('{"id":"42","ids":["42"],"status":"succeeded","charged_usd":0.297,"credits_charged":30,"replayed":false,"notes":[],"jobs":[' . FakeTransport::JOB . ']}');
 
         $jobs = $api->client()->renders->createAndWait(['prompt' => 'A', 'mode' => Mode::TEXT_TO_RENDER]);
 
         self::assertCount(1, $jobs);
+        self::assertSame(0.297, $jobs[0]->chargedUsd);
+        self::assertSame(0.0, $jobs[0]->refundedUsd);
         self::assertSame('https://api.test/v2/renders?wait=90', $api->requests[0]['url']);
         self::assertCount(1, $api->requests);
     }
@@ -160,11 +163,12 @@ final class ClientTest extends TestCase
 
     public function testCancelPostsWithAnIdempotencyKey(): void
     {
-        $api = (new FakeTransport())->ok('{"id":"42","outcome":"refunded","credits_refunded":30}');
+        $api = (new FakeTransport())->ok('{"id":"42","outcome":"refunded","refunded_usd":0.297,"credits_refunded":30}');
 
         $canceled = $api->client()->jobs->cancel('42');
 
         self::assertSame('refunded', $canceled->outcome);
+        self::assertSame(0.297, $canceled->refundedUsd);
         self::assertSame('https://api.test/v2/jobs/42/cancel', $api->requests[0]['url']);
         self::assertArrayHasKey('idempotency-key', $api->requests[0]['headers']);
     }

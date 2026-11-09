@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Mnml\Model;
 
-/** The balance. */
+/**
+ * The balance, in credits.
+ *
+ * @deprecated Read Account::$balanceUsd. A later release removes it.
+ */
 final class AccountCredits
 {
     public function __construct(
-        /** What the next call can spend. */
+        /** @deprecated Read Account::$balanceUsd: the same amount in API credits ($0.0099 each). A later release removes it. */
         public readonly int $spendable,
     ) {
     }

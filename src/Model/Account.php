@@ -13,9 +13,12 @@ final class Account
         public readonly ?string $name,
         /** paid once the account has topped up its API wallet; it sets the limits. */
         public readonly string $tier,
+        /** @deprecated Read $balanceUsd: the same amount in API credits ($0.0099 each). A later release removes it. */
         public readonly AccountCredits $credits,
         public readonly AccountKey $key,
         public readonly AccountLimits $limits,
+        /** What the next call can spend, in US dollars (four decimals). */
+        public readonly float $balanceUsd = 0.0,
     ) {
     }
 
@@ -30,6 +33,7 @@ final class Account
             credits: AccountCredits::fromArray($d['credits'] ?? []),
             key: AccountKey::fromArray($d['key'] ?? []),
             limits: AccountLimits::fromArray($d['limits'] ?? []),
+            balanceUsd: (float) ($d['balance_usd'] ?? 0),
         );
     }
 }

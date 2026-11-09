@@ -116,6 +116,69 @@ final class CoverageTest extends TestCase
         self::assertSame(self::keys(self::prop($video, 'prices')), self::fields(Model\VideoPrice::class));
     }
 
+    /** @param class-string $class @return list<string> Its properties marked @deprecated, in snake_case. */
+    private static function deprecatedFields(string $class): array
+    {
+        $out = [];
+        foreach ((new \ReflectionClass($class))->getProperties(\ReflectionProperty::IS_PUBLIC) as $p) {
+            if (str_contains((string) $p->getDocComment(), '@deprecated')) {
+                $out[] = strtolower((string) preg_replace('/[A-Z]/', '_$0', $p->getName()));
+            }
+        }
+        sort($out);
+
+        return $out;
+    }
+
+    /** @return list<string> The keys the spec marks deprecated on this schema (not nested). */
+    private static function deprecatedKeys(array $schema): array
+    {
+        $out = [];
+        foreach ($schema['properties'] ?? [] as $k => $p) {
+            if (($p['deprecated'] ?? false) === true) {
+                $out[] = $k;
+            }
+        }
+        sort($out);
+
+        return $out;
+    }
+
+    public function testTheSdkDeprecatesExactlyTheFieldsTheSpecDeprecates(): void
+    {
+        $render = self::data('/v2/renders', 'post');
+        $job = self::data('/v2/jobs/{id}', 'get');
+        $account = self::data('/v2/account', 'get');
+        $engines = self::data('/v2/engines', 'get');
+        $engine = self::prop($engines, 'engines');
+        $video = self::prop($engines, 'video_models');
+        $pairs = [
+            [$render, Model\RenderStarted::class],
+            [self::prop($render, 'jobs'), Model\Job::class],
+            [self::data('/v2/edits', 'post'), Model\JobStarted::class],
+            [self::data('/v2/enhancements', 'post'), Model\JobStarted::class],
+            [self::data('/v2/videos', 'post'), Model\JobStarted::class],
+            [$job, Model\Job::class],
+            [self::data('/v2/jobs/{id}/cancel', 'post'), Model\JobCanceled::class],
+            [$account, Model\Account::class],
+            [self::prop($account, 'credits'), Model\AccountCredits::class],
+            [self::prop($account, 'key'), Model\AccountKey::class],
+            [self::prop($account, 'limits'), Model\AccountLimits::class],
+            [self::prop($engine, 'prices'), Model\EnginePrices::class],
+            [self::prop($video, 'prices'), Model\VideoPrice::class],
+        ];
+        $total = 0;
+        foreach ($pairs as [$schema, $class]) {
+            self::assertSame(self::deprecatedKeys($schema), self::deprecatedFields($class), $class);
+            $total += count(self::deprecatedKeys($schema));
+        }
+        // The 16 deprecated answer fields of the spec (Nov 9 2026), each with a dollar field beside it.
+        self::assertSame(16, $total);
+        // credits.low is a webhook, not in the spec: its credit fields go the same way.
+        self::assertSame(['balance', 'threshold'], self::deprecatedFields(Model\CreditsLow::class));
+        self::assertSame(['balance', 'balance_usd', 'threshold', 'threshold_usd'], self::fields(Model\CreditsLow::class));
+    }
+
     public function testTheConstantsHoldEveryValueTheApiTakes(): void
     {
         $render = self::$paths['/v2/renders']['post']['requestBody']['content']['application/json']['schema']['properties'];

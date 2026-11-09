@@ -29,7 +29,7 @@ use Mnml\Resource\Videos;
  */
 final class Client
 {
-    public const VERSION = '0.1.0';
+    public const VERSION = '0.2.0';
 
     /** The longest the API holds an answer (wait), under Cloudflare's 100-second limit. */
     public const MAX_WAIT_SECONDS = 90;
