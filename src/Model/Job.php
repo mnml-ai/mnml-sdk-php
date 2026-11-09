@@ -18,7 +18,9 @@ final class Job
         public readonly ?string $engine,
         /** @var list<JobOutput> Signed links that expire: download what you keep. */
         public readonly array $outputs,
+        /** @deprecated Read $chargedUsd: the same amount in API credits ($0.0099 each). A later release removes it. */
         public readonly int $creditsCharged,
+        /** @deprecated Read $refundedUsd: the same amount in API credits ($0.0099 each). A later release removes it. */
         public readonly int $creditsRefunded,
         /** Why it failed, or null. */
         public readonly ?JobError $error,
@@ -26,6 +28,10 @@ final class Job
         public readonly string $createdAt,
         /** ISO 8601, or null while it runs. */
         public readonly ?string $completedAt,
+        /** What the job charged, in US dollars (four decimals). */
+        public readonly float $chargedUsd = 0.0,
+        /** What came back to the balance, in US dollars (four decimals). */
+        public readonly float $refundedUsd = 0.0,
     ) {
     }
 
@@ -43,6 +49,8 @@ final class Job
             error: isset($d['error']) ? JobError::fromArray($d['error']) : null,
             createdAt: (string) ($d['created_at'] ?? ''),
             completedAt: isset($d['completed_at']) ? (string) $d['completed_at'] : null,
+            chargedUsd: (float) ($d['charged_usd'] ?? 0),
+            refundedUsd: (float) ($d['refunded_usd'] ?? 0),
         );
     }
 

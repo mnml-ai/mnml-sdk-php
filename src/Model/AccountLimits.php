@@ -14,8 +14,10 @@ final class AccountLimits
         /** GET requests (job polls included), counted apart from the rest. */
         public readonly int $readsPerMinute,
         public readonly int $concurrentJobs,
-        /** Credits this key may still spend per UTC day; null is no limit. */
+        /** @deprecated Read $dailyUsd: the same amount in API credits ($0.0099 each). A later release removes it. */
         public readonly ?int $dailyCredits,
+        /** US dollars this key may still spend per UTC day; null is no limit. */
+        public readonly ?float $dailyUsd = null,
     ) {
     }
 
@@ -28,6 +30,7 @@ final class AccountLimits
             readsPerMinute: (int) ($d['reads_per_minute'] ?? 0),
             concurrentJobs: (int) ($d['concurrent_jobs'] ?? 0),
             dailyCredits: isset($d['daily_credits']) ? (int) $d['daily_credits'] : null,
+            dailyUsd: isset($d['daily_usd']) ? (float) $d['daily_usd'] : null,
         );
     }
 }

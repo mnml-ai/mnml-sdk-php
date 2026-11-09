@@ -13,12 +13,15 @@ final class RenderStarted
         /** @var list<string> Every job the call started. */
         public readonly array $ids,
         public readonly string $status,
+        /** @deprecated Read $chargedUsd: the same amount in API credits ($0.0099 each). A later release removes it. */
         public readonly int $creditsCharged,
         public readonly bool $replayed,
         /** @var list<string> */
         public readonly array $notes,
         /** @var list<Job>|null Only with a wait: every job as it stood when the wait ended. */
         public readonly ?array $jobs,
+        /** What the call charged, in US dollars (four decimals). */
+        public readonly float $chargedUsd = 0.0,
     ) {
     }
 
@@ -33,6 +36,7 @@ final class RenderStarted
             replayed: (bool) ($d['replayed'] ?? false),
             notes: array_values(array_map('strval', $d['notes'] ?? [])),
             jobs: isset($d['jobs']) ? array_values(array_map([Job::class, 'fromArray'], $d['jobs'] ?? [])) : null,
+            chargedUsd: (float) ($d['charged_usd'] ?? 0),
         );
     }
 }

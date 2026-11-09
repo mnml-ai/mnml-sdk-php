@@ -45,6 +45,20 @@ final class WebhooksTest extends TestCase
         self::assertNull($event->creditsLow());
     }
 
+    public function testCreditsLowReadsInDollars(): void
+    {
+        $body = '{"type":"credits.low","timestamp":"2026-11-09T09:00:00Z",'
+            . '"data":{"balance_usd":0.396,"threshold_usd":0.99,"balance":40,"threshold":100}}';
+        $sig = Webhooks::sign(self::$secret, 'msg_1', self::NOW, $body);
+
+        $low = Webhooks::verify($body, self::headers($sig), self::$secret, self::NOW)->creditsLow();
+
+        self::assertNotNull($low);
+        self::assertSame(0.396, $low->balanceUsd);
+        self::assertSame(0.99, $low->thresholdUsd);
+        self::assertSame(40, $low->balance);
+    }
+
     public function testAnyOfSeveralSignaturesMayMatchAndPsr7HeadersWork(): void
     {
         $sig = Webhooks::sign(self::$secret, 'msg_1', self::NOW, self::body());

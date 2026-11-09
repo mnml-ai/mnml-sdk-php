@@ -34,8 +34,36 @@ $jobs = $mnml->renders->createAndWait([
 echo $jobs[0]->status, ' ', $jobs[0]->outputs[0]->url;
 ```
 
-Every call spends credits from your prepaid API balance. Top it up in dollars on
+Every call is paid from your prepaid API balance, in US dollars. Top it up on
 [Billing](https://developers.mnml.ai/console/billing).
+
+### Amounts are in dollars
+
+Every amount the API answers with has a US-dollar property, a float to four decimals (`0.2475`
+is 24.75 cents):
+
+| Where                               | Dollar properties                                             |
+| ----------------------------------- | ------------------------------------------------------------- |
+| a create call (`renders->create` …) | `chargedUsd`                                                  |
+| `jobs->get()`                       | `chargedUsd`, `refundedUsd`                                   |
+| `jobs->cancel()`                    | `refundedUsd`                                                 |
+| `account->get()`                    | `balanceUsd`, `key->dailyLimitUsd`, `limits->dailyUsd`        |
+| `engines->list()`                   | `prices->renderUsd`, `prices->editUsd`, video `prices[]->usd` |
+| the `credits.low` webhook           | `balanceUsd`, `thresholdUsd`                                  |
+
+```php
+$account = $mnml->account->get();
+printf("$%.4f left\n", $account->balanceUsd);
+
+foreach ($mnml->engines->list()->engines as $engine) {
+    printf("%s: $%.4f a render\n", $engine->id, $engine->prices->renderUsd);
+}
+```
+
+The credit properties beside them (`creditsCharged`, `creditsRefunded`, `credits->spendable`,
+`dailyCreditLimit`, `dailyCredits`, `prices->render` and `edit`, video `credits`, and the
+webhook's `balance` and `threshold`) are `@deprecated`: your IDE strikes them through, and a
+later release removes them. Read the `Usd` properties instead.
 
 ## Configuration
 
@@ -128,6 +156,9 @@ Verify each delivery against your endpoint's `whsec_` secret, with the raw body:
 $event = Mnml\Webhooks::verify(file_get_contents('php://input'), getallheaders(), $secret);
 if ($event->type === 'job.succeeded') {
     echo $event->job()->outputs[0]->url;
+} elseif ($event->type === 'credits.low') {
+    // In US dollars: time to top up.
+    error_log(sprintf('mnml balance is down to $%.4f', $event->creditsLow()->balanceUsd));
 }
 ```
 
