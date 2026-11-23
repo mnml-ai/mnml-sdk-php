@@ -15,7 +15,10 @@ final class Videos
     {
     }
 
-    /** @param array<string, mixed> $request image, job_id, model, duration_seconds, camera_movement, motion, prompt, end_frame, cinematic, webhook_url. */
+    /**
+     * @param array<string, mixed> $request image, job_id, model, duration_seconds, camera_movement, motion, prompt, raw_prompt, end_frame, cinematic, webhook_url.
+     *                                      raw_prompt is your own prompt, sent as written in place of prompt; camera_movement and motion are then not applied.
+     */
     public function create(array $request, ?string $idempotencyKey = null): JobStarted
     {
         return JobStarted::fromArray($this->client->request('POST', '/v2/videos', $request, $idempotencyKey));
