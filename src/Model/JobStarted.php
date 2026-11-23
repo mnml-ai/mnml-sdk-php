@@ -19,6 +19,10 @@ final class JobStarted
         public readonly array $notes,
         /** What the call charged, in US dollars (four decimals). */
         public readonly float $chargedUsd = 0.0,
+        /** The price at list, before your account's API discount, in US dollars. */
+        public readonly float $listUsd = 0.0,
+        /** Your account's API discount on this call, in percent (35.39 means 35.39 % off); 0 when none. */
+        public readonly float $discountPercent = 0.0,
     ) {
     }
 
@@ -32,6 +36,8 @@ final class JobStarted
             replayed: (bool) ($d['replayed'] ?? false),
             notes: array_values(array_map('strval', $d['notes'] ?? [])),
             chargedUsd: (float) ($d['charged_usd'] ?? 0),
+            listUsd: (float) ($d['list_usd'] ?? 0),
+            discountPercent: (float) ($d['discount_percent'] ?? 0),
         );
     }
 }
